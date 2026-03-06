@@ -1,0 +1,5 @@
+{
+  "name": "SwarmOS",
+  "description": "Agentic Swarm Orchestra Dashboard for managing AI employees.",
+  "requestFramePermissions": ["microphone"]
+}
