@@ -10,6 +10,7 @@ import {
   Send,
   User,
   MessageSquare,
+  X,
 } from "lucide-react";
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 
@@ -27,6 +28,7 @@ export function Chat() {
   // Live API State
   const [isCalling, setIsCalling] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [callError, setCallError] = useState<string | null>(null);
   const sessionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -40,6 +42,7 @@ export function Chat() {
   useEffect(() => {
     setActiveAgent(MOCK_AGENTS.find((a) => a.id === agentId) || MOCK_AGENTS[0]);
     setMessages([]); // Reset messages when switching agents
+    setCallError(null);
   }, [agentId]);
 
   const handleSendMessage = () => {
@@ -62,6 +65,7 @@ export function Chat() {
   const startCall = async () => {
     if (!activeAgent) return;
     try {
+      setCallError(null);
       setIsCalling(true);
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -128,6 +132,7 @@ export function Chat() {
               processor.connect(audioContextRef.current!.destination);
             } catch (err) {
               console.error("Error accessing microphone:", err);
+              setCallError("Could not access microphone. Please check your permissions.");
               endCall();
             }
           },
@@ -160,6 +165,7 @@ export function Chat() {
           },
           onerror: (err) => {
             console.error("Live API error:", err);
+            setCallError("Connection to Live API failed or was interrupted.");
             endCall();
           },
         },
@@ -168,6 +174,7 @@ export function Chat() {
       sessionRef.current = await sessionPromise;
     } catch (error) {
       console.error("Failed to start call:", error);
+      setCallError(error instanceof Error ? error.message : "Failed to establish a connection with the agent.");
       setIsCalling(false);
     }
   };
@@ -301,6 +308,7 @@ export function Chat() {
               {isCalling ? (
                 <>
                   <button
+                    aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
                     onClick={() => setIsMicMuted(!isMicMuted)}
                     className={`p-2 rounded-full ${isMicMuted ? "bg-rose-100 text-rose-600" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
                   >
@@ -326,6 +334,16 @@ export function Chat() {
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+
+        {callError && (
+          <div className="mx-6 mt-4 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm flex items-center justify-between">
+            <span>{callError}</span>
+            <button onClick={() => setCallError(null)} className="p-1 hover:bg-rose-100 rounded-md">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
@@ -383,6 +401,7 @@ export function Chat() {
               disabled={isCalling}
             />
             <button
+              aria-label="Send message"
               onClick={handleSendMessage}
               disabled={!input.trim() || isCalling}
               className="p-1.5 bg-indigo-600 text-white rounded-full disabled:opacity-50 hover:bg-indigo-700 transition-colors"
