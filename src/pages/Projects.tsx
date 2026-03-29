@@ -12,6 +12,8 @@ interface Project {
   messages: { id: string; sender: string; role: 'user' | 'agent' | 'system'; text: string; timestamp: Date }[];
 }
 
+const agentMap = new Map(MOCK_AGENTS.map(agent => [agent.name, agent]));
+
 export function Projects() {
   const [projects, setProjects] = useState<Project[]>([
     {
@@ -163,7 +165,7 @@ export function Projects() {
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                 {msg.role !== 'system' && (
                   <div className="w-8 h-8 rounded-full bg-white border border-neutral-200 shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
-                    {msg.role === 'user' ? <User className="w-4 h-4 text-neutral-500" /> : <img src={MOCK_AGENTS.find(a => a.name === msg.sender)?.avatarUrl || `https://ui-avatars.com/api/?name=${msg.sender}`} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />}
+                    {msg.role === 'user' ? <User className="w-4 h-4 text-neutral-500" /> : <img src={agentMap.get(msg.sender)?.avatarUrl || `https://ui-avatars.com/api/?name=${msg.sender}`} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />}
                   </div>
                 )}
                 

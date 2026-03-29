@@ -57,6 +57,7 @@ export function Layout() {
             SwarmOS
           </h1>
           <button 
+            aria-label="Close menu"
             className="lg:hidden p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg"
             onClick={() => setIsMobileMenuOpen(false)}
           >
@@ -119,6 +120,7 @@ export function Layout() {
         <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-4 lg:px-8 shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
             <button 
+              aria-label="Open menu"
               className="lg:hidden p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg"
               onClick={() => setIsMobileMenuOpen(true)}
             >
@@ -131,6 +133,7 @@ export function Layout() {
           </div>
           <div className="flex items-center gap-4">
             <button 
+              aria-label="Open notifications"
               onClick={() => setIsNotificationsOpen(true)}
               className="relative p-2 text-neutral-500 hover:bg-neutral-100 rounded-full transition-colors"
             >
