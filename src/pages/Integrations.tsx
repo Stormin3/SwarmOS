@@ -130,7 +130,7 @@ export function Integrations() {
       name: newIntegration.name,
       category: newIntegration.category,
       description: newIntegration.description,
-      icon: iconMap[newIntegration.icon] || Plug,
+      icon: (iconMap as any)[newIntegration.icon] || Plug,
       status: newIntegration.status,
       color: "bg-indigo-500",
     };
