@@ -63,7 +63,13 @@ export function Chat() {
     if (!activeAgent) return;
     try {
       setIsCalling(true);
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({
+        httpOptions: {
+          baseUrl: `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/ws`,
+        },
+        // the API key is actually provided by the backend proxy server
+        apiKey: "proxy",
+      });
 
       audioContextRef.current = new (
         window.AudioContext || (window as any).webkitAudioContext
