@@ -110,9 +110,12 @@ export function Chat() {
                   );
                 }
 
-                const base64Data = btoa(
-                  String.fromCharCode(...new Uint8Array(pcmData.buffer)),
-                );
+                const uint8Data = new Uint8Array(pcmData.buffer);
+                let binaryString = "";
+                for (let i = 0; i < uint8Data.length; i++) {
+                  binaryString += String.fromCharCode(uint8Data[i]);
+                }
+                const base64Data = btoa(binaryString);
 
                 sessionPromise.then((session) => {
                   session.sendRealtimeInput({
