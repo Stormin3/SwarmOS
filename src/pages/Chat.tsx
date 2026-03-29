@@ -11,7 +11,6 @@ import {
   User,
   MessageSquare,
 } from "lucide-react";
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 
 export function Chat() {
   const [searchParams] = useSearchParams();
@@ -63,109 +62,132 @@ export function Chat() {
     if (!activeAgent) return;
     try {
       setIsCalling(true);
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
       audioContextRef.current = new (
         window.AudioContext || (window as any).webkitAudioContext
       )({ sampleRate: 16000 });
 
-      const sessionPromise = ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-preview-09-2025",
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: activeAgent.voice },
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+      const ws = new WebSocket(wsUrl);
+      sessionRef.current = ws;
+
+      ws.onopen = () => {
+        console.log("Proxy WebSocket connected");
+        ws.send(
+          JSON.stringify({
+            type: "setup",
+            config: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: activeAgent.voice },
+                },
+              },
+              systemInstruction: activeAgent.systemPrompt,
             },
-          },
-          systemInstruction: activeAgent.systemPrompt,
-        },
-        callbacks: {
-          onopen: async () => {
-            console.log("Live API connected");
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-              });
-              mediaStreamRef.current = stream;
-              const source =
-                audioContextRef.current!.createMediaStreamSource(stream);
-              sourceRef.current = source;
+          }),
+        );
+      };
 
-              const processor = audioContextRef.current!.createScriptProcessor(
-                4096,
-                1,
-                1,
-              );
-              processorRef.current = processor;
+      ws.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
 
-              processor.onaudioprocess = (e) => {
-                if (isMicMuted) return;
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcmData = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                  pcmData[i] = Math.max(
-                    -32768,
-                    Math.min(32767, inputData[i] * 32768),
-                  );
-                }
+        if (message.type === "open") {
+          console.log("Gemini session through proxy opened");
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaStreamRef.current = stream;
+            const source =
+              audioContextRef.current!.createMediaStreamSource(stream);
+            sourceRef.current = source;
 
-                const base64Data = btoa(
-                  String.fromCharCode(...new Uint8Array(pcmData.buffer)),
+            const processor = audioContextRef.current!.createScriptProcessor(
+              4096,
+              1,
+              1,
+            );
+            processorRef.current = processor;
+
+            processor.onaudioprocess = (e) => {
+              if (isMicMuted) return;
+              const inputData = e.inputBuffer.getChannelData(0);
+              const pcmData = new Int16Array(inputData.length);
+              for (let i = 0; i < inputData.length; i++) {
+                pcmData[i] = Math.max(
+                  -32768,
+                  Math.min(32767, inputData[i] * 32768),
                 );
+              }
 
-                sessionPromise.then((session) => {
-                  session.sendRealtimeInput({
-                    media: {
-                      data: base64Data,
-                      mimeType: "audio/pcm;rate=16000",
+              const base64Data = btoa(
+                String.fromCharCode(...new Uint8Array(pcmData.buffer)),
+              );
+
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                  JSON.stringify({
+                    type: "realtimeInput",
+                    data: {
+                      media: {
+                        data: base64Data,
+                        mimeType: "audio/pcm;rate=16000",
+                      },
                     },
-                  });
-                });
-              };
-
-              source.connect(processor);
-              processor.connect(audioContextRef.current!.destination);
-            } catch (err) {
-              console.error("Error accessing microphone:", err);
-              endCall();
-            }
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const base64Audio =
-              message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio) {
-              const binaryString = atob(base64Audio);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+                  }),
+                );
               }
-              const pcmData = new Int16Array(bytes.buffer);
-              const floatData = new Float32Array(pcmData.length);
-              for (let i = 0; i < pcmData.length; i++) {
-                floatData[i] = pcmData[i] / 32768.0;
-              }
-              audioQueueRef.current.push(floatData);
-              playNextAudio();
-            }
+            };
 
-            if (message.serverContent?.interrupted) {
-              audioQueueRef.current = [];
-              isPlayingRef.current = false;
+            source.connect(processor);
+            processor.connect(audioContextRef.current!.destination);
+          } catch (err) {
+            console.error("Error accessing microphone:", err);
+            endCall();
+          }
+        } else if (message.type === "message") {
+          const genaiMessage = message.data;
+          const base64Audio =
+            genaiMessage.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+          if (base64Audio) {
+            const binaryString = atob(base64Audio);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
             }
-          },
-          onclose: () => {
-            console.log("Live API closed");
-            endCall();
-          },
-          onerror: (err) => {
-            console.error("Live API error:", err);
-            endCall();
-          },
-        },
-      });
+            const pcmData = new Int16Array(bytes.buffer);
+            const floatData = new Float32Array(pcmData.length);
+            for (let i = 0; i < pcmData.length; i++) {
+              floatData[i] = pcmData[i] / 32768.0;
+            }
+            audioQueueRef.current.push(floatData);
+            playNextAudio();
+          }
 
-      sessionRef.current = await sessionPromise;
+          if (genaiMessage.serverContent?.interrupted) {
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+          }
+        } else if (message.type === "close") {
+          console.log("Proxy Gemini session closed");
+          endCall();
+        } else if (message.type === "error") {
+          console.error("Proxy Gemini session error:", message.error);
+          endCall();
+        }
+      };
+
+      ws.onclose = () => {
+        console.log("Proxy WebSocket closed");
+        endCall();
+      };
+
+      ws.onerror = (err) => {
+        console.error("Proxy WebSocket error:", err);
+        endCall();
+      };
     } catch (error) {
       console.error("Failed to start call:", error);
       setIsCalling(false);
