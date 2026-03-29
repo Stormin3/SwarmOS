@@ -82,7 +82,6 @@ export function Chat() {
         },
         callbacks: {
           onopen: async () => {
-            console.log("Live API connected");
             try {
               const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
