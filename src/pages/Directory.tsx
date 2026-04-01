@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MOCK_AGENTS } from "../data/mockAgents";
 import { motion } from "motion/react";
-import { Settings, MessageSquare } from "lucide-react";
+import { Settings, MessageSquare, X } from "lucide-react";
 
 export function Directory() {
+  const [showToast, setShowToast] = useState(false);
+
+  const handleHireClick = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
@@ -13,7 +21,7 @@ export function Directory() {
             Manage your AI workforce and their configurations.
           </p>
         </div>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
+        <button onClick={handleHireClick} className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors">
           + Hire New Agent
         </button>
       </div>
@@ -86,6 +94,15 @@ export function Directory() {
           </motion.div>
         ))}
       </div>
+      {/* Toast Notification */}
+      {showToast && (
+        <div className="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <span>Hiring new agents is currently in beta.</span>
+          <button onClick={() => setShowToast(false)} className="text-gray-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,8 +10,8 @@ import {
   Send,
   User,
   MessageSquare,
+  X,
 } from "lucide-react";
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
 
 export function Chat() {
   const [searchParams] = useSearchParams();
@@ -27,6 +27,7 @@ export function Chat() {
   // Live API State
   const [isCalling, setIsCalling] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [callError, setCallError] = useState<string | null>(null);
   const sessionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -40,6 +41,7 @@ export function Chat() {
   useEffect(() => {
     setActiveAgent(MOCK_AGENTS.find((a) => a.id === agentId) || MOCK_AGENTS[0]);
     setMessages([]); // Reset messages when switching agents
+    setCallError(null);
   }, [agentId]);
 
   const handleSendMessage = () => {
@@ -62,112 +64,133 @@ export function Chat() {
   const startCall = async () => {
     if (!activeAgent) return;
     try {
+      setCallError(null);
       setIsCalling(true);
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-      audioContextRef.current = new (
-        window.AudioContext || (window as any).webkitAudioContext
-      )({ sampleRate: 16000 });
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+      const ws = new WebSocket(wsUrl);
+      sessionRef.current = ws;
 
-      const sessionPromise = ai.live.connect({
-        model: "gemini-2.5-flash-native-audio-preview-09-2025",
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: activeAgent.voice },
+      ws.onopen = () => {
+        ws.send(
+          JSON.stringify({
+            type: "setup",
+            config: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: activeAgent.voice },
+                },
+              },
+              systemInstruction: activeAgent.systemPrompt,
             },
-          },
-          systemInstruction: activeAgent.systemPrompt,
-        },
-        callbacks: {
-          onopen: async () => {
-            console.log("Live API connected");
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true,
-              });
-              mediaStreamRef.current = stream;
-              const source =
-                audioContextRef.current!.createMediaStreamSource(stream);
-              sourceRef.current = source;
+          }),
+        );
+      };
 
-              const processor = audioContextRef.current!.createScriptProcessor(
-                4096,
-                1,
-                1,
-              );
-              processorRef.current = processor;
+      ws.onmessage = async (event) => {
+        const message = JSON.parse(event.data);
 
-              processor.onaudioprocess = (e) => {
-                if (isMicMuted) return;
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcmData = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                  pcmData[i] = Math.max(
-                    -32768,
-                    Math.min(32767, inputData[i] * 32768),
-                  );
-                }
+        if (message.type === "open") {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              audio: true,
+            });
+            mediaStreamRef.current = stream;
+            const source =
+              audioContextRef.current!.createMediaStreamSource(stream);
+            sourceRef.current = source;
 
-                const base64Data = btoa(
-                  String.fromCharCode(...new Uint8Array(pcmData.buffer)),
+            const processor = audioContextRef.current!.createScriptProcessor(
+              4096,
+              1,
+              1,
+            );
+            processorRef.current = processor;
+
+            processor.onaudioprocess = (e) => {
+              if (isMicMuted) return;
+              const inputData = e.inputBuffer.getChannelData(0);
+              const pcmData = new Int16Array(inputData.length);
+              for (let i = 0; i < inputData.length; i++) {
+                pcmData[i] = Math.max(
+                  -32768,
+                  Math.min(32767, inputData[i] * 32768),
                 );
+              }
 
-                sessionPromise.then((session) => {
-                  session.sendRealtimeInput({
-                    media: {
-                      data: base64Data,
-                      mimeType: "audio/pcm;rate=16000",
+              const uint8Data = new Uint8Array(pcmData.buffer);
+              let binaryString = "";
+              for (let i = 0; i < uint8Data.length; i++) {
+                binaryString += String.fromCharCode(uint8Data[i]);
+              }
+              const base64Data = btoa(binaryString);
+
+              if (ws.readyState === WebSocket.OPEN) {
+                ws.send(
+                  JSON.stringify({
+                    type: "realtimeInput",
+                    data: {
+                      media: {
+                        data: base64Data,
+                        mimeType: "audio/pcm;rate=16000",
+                      },
                     },
-                  });
-                });
-              };
-
-              source.connect(processor);
-              processor.connect(audioContextRef.current!.destination);
-            } catch (err) {
-              console.error("Error accessing microphone:", err);
-              endCall();
-            }
-          },
-          onmessage: async (message: LiveServerMessage) => {
-            const base64Audio =
-              message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-            if (base64Audio) {
-              const binaryString = atob(base64Audio);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+                  }),
+                );
               }
-              const pcmData = new Int16Array(bytes.buffer);
-              const floatData = new Float32Array(pcmData.length);
-              for (let i = 0; i < pcmData.length; i++) {
-                floatData[i] = pcmData[i] / 32768.0;
-              }
-              audioQueueRef.current.push(floatData);
-              playNextAudio();
-            }
+            };
 
-            if (message.serverContent?.interrupted) {
-              audioQueueRef.current = [];
-              isPlayingRef.current = false;
+            source.connect(processor);
+            processor.connect(audioContextRef.current!.destination);
+          } catch (err) {
+            console.error("Error accessing microphone:", err);
+            endCall();
+          }
+        } else if (message.type === "message") {
+          const genaiMessage = message.data;
+          const base64Audio =
+            genaiMessage.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+          if (base64Audio) {
+            const binaryString = atob(base64Audio);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
             }
-          },
-          onclose: () => {
-            console.log("Live API closed");
-            endCall();
-          },
-          onerror: (err) => {
-            console.error("Live API error:", err);
-            endCall();
-          },
-        },
-      });
+            const pcmData = new Int16Array(bytes.buffer);
+            const floatData = new Float32Array(pcmData.length);
+            for (let i = 0; i < pcmData.length; i++) {
+              floatData[i] = pcmData[i] / 32768.0;
+            }
+            audioQueueRef.current.push(floatData);
+            playNextAudio();
+          }
 
-      sessionRef.current = await sessionPromise;
+          if (genaiMessage.serverContent?.interrupted) {
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+          }
+        } else if (message.type === "close") {
+          endCall();
+        } else if (message.type === "error") {
+          console.error("Proxy Gemini session error:", message.error);
+          endCall();
+        }
+      };
+
+      ws.onclose = () => {
+        endCall();
+      };
+
+      ws.onerror = (err) => {
+        console.error("Proxy WebSocket error:", err);
+        endCall();
+      };
     } catch (error) {
       console.error("Failed to start call:", error);
+      setCallError(error instanceof Error ? error.message : "Failed to establish a connection with the agent.");
       setIsCalling(false);
     }
   };
@@ -301,6 +324,7 @@ export function Chat() {
               {isCalling ? (
                 <>
                   <button
+                    aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
                     onClick={() => setIsMicMuted(!isMicMuted)}
                     className={`p-2 rounded-full ${isMicMuted ? "bg-rose-100 text-rose-600" : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"}`}
                   >
@@ -326,6 +350,16 @@ export function Chat() {
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+
+        {callError && (
+          <div className="mx-6 mt-4 p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm flex items-center justify-between">
+            <span>{callError}</span>
+            <button onClick={() => setCallError(null)} className="p-1 hover:bg-rose-100 rounded-md">
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
 
@@ -383,6 +417,7 @@ export function Chat() {
               disabled={isCalling}
             />
             <button
+              aria-label="Send message"
               onClick={handleSendMessage}
               disabled={!input.trim() || isCalling}
               className="p-1.5 bg-indigo-600 text-white rounded-full disabled:opacity-50 hover:bg-indigo-700 transition-colors"
