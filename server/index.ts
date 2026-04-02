@@ -32,7 +32,7 @@ wss.on("connection", (ws) => {
         console.log("Setting up Gemini session with config:", message.config);
         try {
           session = await genAI.live.connect({
-            model: message.model || "gemini-2.5-flash-native-audio-preview-09-2025",
+            model: "gemini-2.5-flash-native-audio-preview-09-2025",
             config: message.config,
             callbacks: {
               onopen: () => {
