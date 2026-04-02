@@ -67,8 +67,15 @@ export function Chat() {
       setCallError(null);
       setIsCalling(true);
 
+      // Fetch authentication token for WebSocket
+      const tokenResponse = await fetch('/api/ws-token');
+      if (!tokenResponse.ok) {
+        throw new Error("Failed to authenticate WebSocket connection");
+      }
+      const { token } = await tokenResponse.json();
+
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/api/ws?token=${token}`;
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       const ws = new WebSocket(wsUrl);
       sessionRef.current = ws;
