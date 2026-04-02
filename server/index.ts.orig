@@ -49,13 +49,13 @@ wss.on("connection", (ws) => {
               },
               onerror: (err) => {
                 console.error("Gemini session error:", err);
-                ws.send(JSON.stringify({ type: "error", error: "An error occurred during the Gemini session." }));
+                ws.send(JSON.stringify({ type: "error", error: err.message }));
               },
             },
           });
         } catch (setupError: any) {
           console.error("Error connecting to Gemini:", setupError);
-          ws.send(JSON.stringify({ type: "error", error: "Failed to connect to Gemini." }));
+          ws.send(JSON.stringify({ type: "error", error: setupError.message }));
         }
       } else if (message.type === "realtimeInput") {
         if (session) {

@@ -1,0 +1,18 @@
+--- server/index.ts
++++ server/index.ts
+@@ -49,14 +49,14 @@
+               },
+               onerror: (err) => {
+                 console.error("Gemini session error:", err);
+-                ws.send(JSON.stringify({ type: "error", error: err.message }));
++                ws.send(JSON.stringify({ type: "error", error: "An error occurred during the Gemini session." }));
+               },
+             },
+           });
+         } catch (setupError: any) {
+           console.error("Error connecting to Gemini:", setupError);
+-          ws.send(JSON.stringify({ type: "error", error: setupError.message }));
++          ws.send(JSON.stringify({ type: "error", error: "Failed to connect to Gemini." }));
+         }
+       } else if (message.type === "realtimeInput") {
+         if (session) {
