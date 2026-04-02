@@ -20,6 +20,46 @@ if (!GEMINI_API_KEY) {
 
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+const sanitizeConfig = (config: any) => {
+  if (!config || typeof config !== "object") return {};
+
+  const sanitized: any = {};
+
+  if (Array.isArray(config.responseModalities)) {
+    const validModalities = ["AUDIO", "TEXT", "IMAGE"];
+    sanitized.responseModalities = config.responseModalities.filter(
+      (m: any) => typeof m === "string" && validModalities.includes(m.toUpperCase())
+    );
+  }
+
+  if (
+    config.speechConfig &&
+    config.speechConfig.voiceConfig &&
+    config.speechConfig.voiceConfig.prebuiltVoiceConfig &&
+    typeof config.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName === "string"
+  ) {
+    sanitized.speechConfig = {
+      voiceConfig: {
+        prebuiltVoiceConfig: {
+          voiceName: config.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,
+        },
+      },
+    };
+  }
+
+  if (typeof config.systemInstruction === "string") {
+    sanitized.systemInstruction = config.systemInstruction;
+  } else if (config.systemInstruction && Array.isArray(config.systemInstruction.parts)) {
+    sanitized.systemInstruction = {
+      parts: config.systemInstruction.parts
+        .filter((p: any) => p && typeof p.text === "string")
+        .map((p: any) => ({ text: p.text }))
+    };
+  }
+
+  return sanitized;
+};
+
 wss.on("connection", (ws) => {
   console.log("Client connected to WebSocket proxy");
   let session: any = null;
@@ -29,11 +69,12 @@ wss.on("connection", (ws) => {
       const message = JSON.parse(data.toString());
 
       if (message.type === "setup") {
-        console.log("Setting up Gemini session with config:", message.config);
+        const sanitizedConfig = sanitizeConfig(message.config);
+        console.log("Setting up Gemini session with config:", JSON.stringify(sanitizedConfig));
         try {
           session = await genAI.live.connect({
             model: message.model || "gemini-2.5-flash-native-audio-preview-09-2025",
-            config: message.config,
+            config: sanitizedConfig,
             callbacks: {
               onopen: () => {
                 console.log("Gemini session opened");
