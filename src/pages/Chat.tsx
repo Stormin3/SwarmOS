@@ -155,14 +155,15 @@ export function Chat() {
             genaiMessage.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
           if (base64Audio) {
             const binaryString = atob(base64Audio);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            const pcmData = new Int16Array(bytes.buffer);
-            const floatData = new Float32Array(pcmData.length);
-            for (let i = 0; i < pcmData.length; i++) {
-              floatData[i] = pcmData[i] / 32768.0;
+            const len = binaryString.length;
+            const floatData = new Float32Array(Math.floor(len / 2));
+            let pcmIndex = 0;
+            for (let i = 0; i < len; i += 2) {
+              let pcm =
+                binaryString.charCodeAt(i) |
+                (binaryString.charCodeAt(i + 1) << 8);
+              if (pcm & 0x8000) pcm |= 0xffff0000;
+              floatData[pcmIndex++] = pcm / 32768.0;
             }
             audioQueueRef.current.push(floatData);
             playNextAudio();
