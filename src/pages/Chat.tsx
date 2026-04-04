@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { MOCK_AGENTS } from "../data/mockAgents";
+import { MOCK_AGENTS, MOCK_AGENTS_MAP } from "../data/mockAgents";
 import { Agent } from "../types";
 import {
   Mic,
@@ -17,7 +17,7 @@ export function Chat() {
   const [searchParams] = useSearchParams();
   const agentId = searchParams.get("agent") || MOCK_AGENTS[0].id;
   const [activeAgent, setActiveAgent] = useState<Agent | undefined>(
-    MOCK_AGENTS.find((a) => a.id === agentId),
+    MOCK_AGENTS_MAP.get(agentId),
   );
   const [messages, setMessages] = useState<
     { role: "user" | "agent"; text: string }[]
@@ -39,7 +39,7 @@ export function Chat() {
   const isPlayingRef = useRef(false);
 
   useEffect(() => {
-    setActiveAgent(MOCK_AGENTS.find((a) => a.id === agentId) || MOCK_AGENTS[0]);
+    setActiveAgent(MOCK_AGENTS_MAP.get(agentId) || MOCK_AGENTS[0]);
     setMessages([]); // Reset messages when switching agents
     setCallError(null);
   }, [agentId]);

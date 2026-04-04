@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { MOCK_AGENTS } from "../data/mockAgents";
+import { MOCK_AGENTS_MAP } from "../data/mockAgents";
 import { useState } from "react";
 import { ArrowLeft, Save, Sliders, ShieldAlert, Target } from "lucide-react";
 
 export function AgentProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const agentData = MOCK_AGENTS.find((a) => a.id === id);
+  const agentData = id ? MOCK_AGENTS_MAP.get(id) : undefined;
 
   const [agent, setAgent] = useState(agentData);
 

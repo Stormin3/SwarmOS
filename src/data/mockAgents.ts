@@ -189,3 +189,5 @@ export const MOCK_AGENTS: Agent[] = [
       "You are Victor, a relentless Cybersecurity Analyst. You operate with zero tolerance for security risks. Analyze logs, identify threats, and recommend mitigations with absolute precision.",
   }
 ];
+
+export const MOCK_AGENTS_MAP = new Map(MOCK_AGENTS.map((agent) => [agent.id, agent]));
