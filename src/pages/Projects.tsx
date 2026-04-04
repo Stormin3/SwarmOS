@@ -34,6 +34,32 @@ export function Projects() {
 
   const activeProject = projects.find(p => p.id === activeProjectId);
 
+  const simulateDelegation = async (projectId: string) => {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId) {
+        return {
+          ...p,
+          stage: "Planning",
+          messages: [...p.messages, { id: `m-${Date.now()}`, sender: "Eleanor Vance", role: "agent", text: "I have received the request. Analyzing requirements and preparing delegation plan...", timestamp: new Date() }]
+        };
+      }
+      return p;
+    }));
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId) {
+        return {
+          ...p,
+          stage: "Delegating",
+          messages: [...p.messages, { id: `m-${Date.now()}`, sender: "System", role: "system", text: "Delegating tasks to available agents based on skills...", timestamp: new Date() }]
+        };
+      }
+      return p;
+    }));
+  };
+
   const handleCreateProject = () => {
     if (!newTaskInput.trim()) return;
     const newProj: Project = {
@@ -49,31 +75,7 @@ export function Projects() {
     setNewTaskInput("");
 
     // Simulate delegation
-    setTimeout(() => {
-      setProjects(prev => prev.map(p => {
-        if (p.id === newProj.id) {
-          return {
-            ...p,
-            stage: "Planning",
-            messages: [...p.messages, { id: `m-${Date.now()}`, sender: "Eleanor Vance", role: "agent", text: "I have received the request. Analyzing requirements and preparing delegation plan...", timestamp: new Date() }]
-          };
-        }
-        return p;
-      }));
-      
-      setTimeout(() => {
-        setProjects(prev => prev.map(p => {
-          if (p.id === newProj.id) {
-            return {
-              ...p,
-              stage: "Delegating",
-              messages: [...p.messages, { id: `m-${Date.now()}`, sender: "System", role: "system", text: "Delegating tasks to available agents based on skills...", timestamp: new Date() }]
-            };
-          }
-          return p;
-        }));
-      }, 2000);
-    }, 1500);
+    simulateDelegation(newProj.id);
   };
 
   const STAGES: Stage[] = ["Initiated", "Planning", "Delegating", "In Progress", "Review", "Completed"];
