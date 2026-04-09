@@ -21,7 +21,6 @@ if (!GEMINI_API_KEY) {
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 wss.on("connection", (ws) => {
-  console.log("Client connected to WebSocket proxy");
   let session: any = null;
 
   ws.on("message", async (data) => {
@@ -29,21 +28,18 @@ wss.on("connection", (ws) => {
       const message = JSON.parse(data.toString());
 
       if (message.type === "setup") {
-        console.log("Setting up Gemini session with config:", message.config);
         try {
           session = await genAI.live.connect({
             model: message.model || "gemini-2.5-flash-native-audio-preview-09-2025",
             config: message.config,
             callbacks: {
               onopen: () => {
-                console.log("Gemini session opened");
                 ws.send(JSON.stringify({ type: "open" }));
               },
               onmessage: (response) => {
                 ws.send(JSON.stringify({ type: "message", data: response }));
               },
               onclose: () => {
-                console.log("Gemini session closed");
                 ws.send(JSON.stringify({ type: "close" }));
                 ws.close();
               },
@@ -70,7 +66,6 @@ wss.on("connection", (ws) => {
   });
 
   ws.on("close", () => {
-    console.log("Client disconnected");
     if (session) {
       session.close();
     }
