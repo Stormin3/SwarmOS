@@ -1,6 +1,6 @@
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type Session } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer } from "http";
 
@@ -22,7 +22,7 @@ const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 wss.on("connection", (ws) => {
   console.log("Client connected to WebSocket proxy");
-  let session: any = null;
+  let session: Session | null = null;
 
   ws.on("message", async (data) => {
     try {
