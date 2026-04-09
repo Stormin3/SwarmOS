@@ -80,3 +80,4 @@ wss.on("connection", (ws) => {
 httpServer.listen(port, () => {
   console.log(`Backend proxy server listening on port ${port}`);
 });
+export { httpServer, wss };
