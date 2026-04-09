@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI } from "@google/genai";
@@ -7,6 +8,7 @@ import { createServer } from "http";
 dotenv.config();
 
 const app = express();
+app.use(cors());
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer, path: "/api/ws" });
