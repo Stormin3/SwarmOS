@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Palette, Image as ImageIcon, FileText, ShieldCheck, BookOpen, Upload, Plus, Download, Trash2, Edit2 } from "lucide-react";
 import { cn } from "../lib/utils";
 
