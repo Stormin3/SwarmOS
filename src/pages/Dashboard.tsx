@@ -1,3 +1,4 @@
+import { type ElementType } from 'react';
 import { MOCK_AGENTS } from "../data/mockAgents";
 import { Activity, Users, Zap, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
@@ -132,7 +133,7 @@ function StatCard({
 }: {
   title: string;
   value: string | number;
-  icon: any;
+  icon: ElementType;
   trend: string;
 }) {
   return (
