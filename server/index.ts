@@ -66,7 +66,7 @@ wss.on("connection", (ws) => {
       if (message.type === "setup") {
         try {
           session = await genAI.live.connect({
-            model: requestedModel,
+            model: "gemini-2.5-flash-native-audio-preview-09-2025",
             config: message.config,
             callbacks: {
               onopen: () => {
