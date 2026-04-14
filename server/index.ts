@@ -56,53 +56,26 @@ app.get("/api/ws-token", (req, res) => {
 
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-wss.on("connection", (ws, request) => {
-  const url = new URL(request.url || "", `http://${request.headers.host}`);
-  const token = url.searchParams.get("token");
-
-  if (!token || !wsTokens.has(token)) {
-    console.log("Rejected unauthorized WebSocket connection");
-    ws.close(1008, "Unauthorized");
-    return;
-  }
-
-  // Token is single-use
-  wsTokens.delete(token);
-
-  console.log("Client connected to WebSocket proxy");
-  let session: Session | null = null;
+wss.on("connection", (ws) => {
+  let session: any = null;
 
   ws.on("message", async (data) => {
     try {
       const message = JSON.parse(data.toString());
 
       if (message.type === "setup") {
-        console.log("Setting up Gemini session with config:", message.config);
-
-        const defaultModel = "gemini-2.5-flash-native-audio-preview-09-2025";
-        const allowedModels = [defaultModel];
-        const requestedModel = message.model || defaultModel;
-
-        if (!allowedModels.includes(requestedModel)) {
-          console.warn(`Attempted to use unauthorized model: ${requestedModel}`);
-          ws.send(JSON.stringify({ type: "error", error: "Unauthorized model selection" }));
-          return;
-        }
-
         try {
           session = await genAI.live.connect({
             model: requestedModel,
             config: message.config,
             callbacks: {
               onopen: () => {
-                console.log("Gemini session opened");
                 ws.send(JSON.stringify({ type: "open" }));
               },
               onmessage: (response) => {
                 ws.send(JSON.stringify({ type: "message", data: response }));
               },
               onclose: () => {
-                console.log("Gemini session closed");
                 ws.send(JSON.stringify({ type: "close" }));
                 ws.close();
               },
@@ -129,7 +102,6 @@ wss.on("connection", (ws, request) => {
   });
 
   ws.on("close", () => {
-    console.log("Client disconnected");
     if (session) {
       session.close();
     }
