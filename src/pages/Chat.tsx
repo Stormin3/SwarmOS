@@ -27,7 +27,8 @@ export function Chat() {
   // Live API State
   const [isCalling, setIsCalling] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
-  const sessionRef = useRef<any>(null);
+  const [callError, setCallError] = useState<string | null>(null);
+  const sessionRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
