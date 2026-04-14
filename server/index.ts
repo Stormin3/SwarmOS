@@ -77,12 +77,22 @@ wss.on("connection", (ws, request) => {
       const message = JSON.parse(data.toString());
 
       if (message.type === "setup") {
-        const sanitizedConfig = sanitizeConfig(message.config);
-        console.log("Setting up Gemini session with config:", JSON.stringify(sanitizedConfig));
+        console.log("Setting up Gemini session with config:", message.config);
+
+        const defaultModel = "gemini-2.5-flash-native-audio-preview-09-2025";
+        const allowedModels = [defaultModel];
+        const requestedModel = message.model || defaultModel;
+
+        if (!allowedModels.includes(requestedModel)) {
+          console.warn(`Attempted to use unauthorized model: ${requestedModel}`);
+          ws.send(JSON.stringify({ type: "error", error: "Unauthorized model selection" }));
+          return;
+        }
+
         try {
           session = await genAI.live.connect({
-            model: message.model || "gemini-2.5-flash-native-audio-preview-09-2025",
-            config: sanitizedConfig,
+            model: requestedModel,
+            config: message.config,
             callbacks: {
               onopen: () => {
                 console.log("Gemini session opened");
