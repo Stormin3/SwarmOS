@@ -1,6 +1,6 @@
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type Session } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer } from "http";
 
@@ -70,7 +70,7 @@ wss.on("connection", (ws, request) => {
   wsTokens.delete(token);
 
   console.log("Client connected to WebSocket proxy");
-  let session: any = null;
+  let session: Session | null = null;
 
   ws.on("message", async (data) => {
     try {
