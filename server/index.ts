@@ -81,6 +81,15 @@ wss.on("connection", (ws) => {
         }
 
         try {
+          const ALLOWED_MODELS = ["gemini-2.5-flash-native-audio-preview-09-2025", "gemini-2.0-flash-exp"];
+          const requestedModel = message.model || "gemini-2.5-flash-native-audio-preview-09-2025";
+
+          if (!ALLOWED_MODELS.includes(requestedModel)) {
+            console.error(`Invalid model requested: ${requestedModel}`);
+            ws.send(JSON.stringify({ type: "error", error: "Invalid model requested" }));
+            return;
+          }
+
           session = await genAI.live.connect({
             model: requestedModel,
             config: message.config,
