@@ -36,49 +36,39 @@ if (!GEMINI_API_KEY) {
   process.exit(1);
 }
 
+
+// Simple in-memory token store for WebSocket authentication
+const wsTokens = new Set<string>();
+
+app.get("/api/ws-token", (req, res) => {
+  // In a real application, you would verify the user's session or JWT here
+  // before issuing a WebSocket token.
+  const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+  wsTokens.add(token);
+
+  // Token expires after 30 seconds
+  setTimeout(() => {
+    wsTokens.delete(token);
+  }, 30000);
+
+  res.json({ token });
+});
+
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-const sanitizeConfig = (config: any) => {
-  if (!config || typeof config !== "object") return {};
+wss.on("connection", (ws, request) => {
+  const url = new URL(request.url || "", `http://${request.headers.host}`);
+  const token = url.searchParams.get("token");
 
-  const sanitized: any = {};
-
-  if (Array.isArray(config.responseModalities)) {
-    const validModalities = ["AUDIO", "TEXT", "IMAGE"];
-    sanitized.responseModalities = config.responseModalities.filter(
-      (m: any) => typeof m === "string" && validModalities.includes(m.toUpperCase())
-    );
+  if (!token || !wsTokens.has(token)) {
+    console.log("Rejected unauthorized WebSocket connection");
+    ws.close(1008, "Unauthorized");
+    return;
   }
 
-  if (
-    config.speechConfig &&
-    config.speechConfig.voiceConfig &&
-    config.speechConfig.voiceConfig.prebuiltVoiceConfig &&
-    typeof config.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName === "string"
-  ) {
-    sanitized.speechConfig = {
-      voiceConfig: {
-        prebuiltVoiceConfig: {
-          voiceName: config.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName,
-        },
-      },
-    };
-  }
+  // Token is single-use
+  wsTokens.delete(token);
 
-  if (typeof config.systemInstruction === "string") {
-    sanitized.systemInstruction = config.systemInstruction;
-  } else if (config.systemInstruction && Array.isArray(config.systemInstruction.parts)) {
-    sanitized.systemInstruction = {
-      parts: config.systemInstruction.parts
-        .filter((p: any) => p && typeof p.text === "string")
-        .map((p: any) => ({ text: p.text }))
-    };
-  }
-
-  return sanitized;
-};
-
-wss.on("connection", (ws) => {
   console.log("Client connected to WebSocket proxy");
   let session: any = null;
 

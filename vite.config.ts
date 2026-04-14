@@ -17,6 +17,9 @@ export default defineConfig(({mode}) => {
         '/api/ws': {
           target: 'ws://localhost:3001',
           ws: true,
+        },
+        '/api/ws-token': {
+          target: 'http://localhost:3001',
         }
       },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
