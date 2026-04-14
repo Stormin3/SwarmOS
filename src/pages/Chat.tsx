@@ -165,13 +165,26 @@ export function Chat() {
           },
           onclose: () => {
             endCall();
-          },
-          onerror: (err) => {
-            console.error("Live API error:", err);
-            endCall();
-          },
-        },
-      });
+          }
+        } else if (message.type === "message") {
+          const genaiMessage = message.data;
+          const base64Audio =
+            genaiMessage.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+          if (base64Audio) {
+            const binaryString = atob(base64Audio);
+            const len = binaryString.length;
+            const floatData = new Float32Array(Math.floor(len / 2));
+            let pcmIndex = 0;
+            for (let i = 0; i < len; i += 2) {
+              let pcm =
+                binaryString.charCodeAt(i) |
+                (binaryString.charCodeAt(i + 1) << 8);
+              if (pcm & 0x8000) pcm |= 0xffff0000;
+              floatData[pcmIndex++] = pcm / 32768.0;
+            }
+            audioQueueRef.current.push(floatData);
+            playNextAudio();
+          }
 
       sessionRef.current = await sessionPromise;
     } catch (error) {
