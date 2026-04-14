@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, type Session } from "@google/genai";
@@ -7,6 +8,7 @@ import { createServer } from "http";
 dotenv.config();
 
 const app = express();
+app.use(cors());
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
