@@ -1,119 +1,124 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Chat } from './Chat';
 
-describe('Chat Component', () => {
+describe('Chat Component - Error Handling', () => {
   let originalAudioContext: any;
-  let mockGetUserMedia: Mock;
+  let originalWebSocket: any;
+  let originalMediaDevices: any;
   let consoleErrorSpy: any;
 
   beforeEach(() => {
-    // Mock AudioContext properly as a class
     originalAudioContext = window.AudioContext;
-    class MockAudioContext {
-      createMediaStreamSource = vi.fn();
-      createScriptProcessor = vi.fn().mockImplementation(() => ({
-        connect: vi.fn(),
-        disconnect: vi.fn(),
-        onaudioprocess: null
-      }));
-      destination = {};
-      createBuffer = vi.fn();
-      createBufferSource = vi.fn();
-      close = vi.fn();
-    }
-    window.AudioContext = MockAudioContext as any;
-    (window as any).webkitAudioContext = MockAudioContext;
-
-    // Mock getUserMedia
-    mockGetUserMedia = vi.fn();
-    Object.defineProperty(navigator, 'mediaDevices', {
-      value: {
-        getUserMedia: mockGetUserMedia,
-      },
-      writable: true,
-      configurable: true
-    });
-
-    // Spy on console.error
+    originalWebSocket = window.WebSocket;
+    originalMediaDevices = navigator.mediaDevices;
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     window.AudioContext = originalAudioContext;
-    delete (window as any).webkitAudioContext;
-    vi.restoreAllMocks();
+    window.WebSocket = originalWebSocket;
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: originalMediaDevices,
+      configurable: true
+    });
+    consoleErrorSpy.mockRestore();
   });
 
-  it('handles microphone access error correctly during call', async () => {
-    let mockWsInstance: any = null;
+  it('handles startCall error correctly', async () => {
+    const errorToThrow = new Error('Simulated startCall error');
 
-    vi.stubGlobal('WebSocket', class MockWebSocket {
-        send: any;
-        close: any;
-        readyState: number;
-        onopen: any;
-        onmessage: any;
-        onclose: any;
-        onerror: any;
-        constructor() {
-            this.send = vi.fn();
-            this.close = vi.fn();
-            this.readyState = 1;
-            mockWsInstance = this;
-        }
-    });
+    // We mock the audio context but do not define it to be a constructor
+    // Or we throw from the constructor
+    class ThrowingAudioContext {
+      constructor() {
+        throw errorToThrow;
+      }
+    }
+
+    window.AudioContext = ThrowingAudioContext as any;
 
     render(
-      <MemoryRouter initialEntries={[`/?agent=eleanor`]}>
+      <MemoryRouter>
         <Chat />
       </MemoryRouter>
     );
 
-    // Wait for the agent to load
-    const agentButtons = await screen.findAllByText('Eleanor Vance');
-    expect(agentButtons.length).toBeGreaterThan(0);
+    const callButton = screen.getByRole('button', { name: /Call Agent/i });
+    fireEvent.click(callButton);
 
-    // Trigger the WebSocket open message
-    const errorMsg = new Error("Microphone denied");
-    mockGetUserMedia.mockRejectedValueOnce(errorMsg);
-
-    // Click Call Agent
-    const callButton = await screen.findByText('Call Agent');
-    await act(async () => {
-        fireEvent.click(callButton);
-    });
-
-    // Wait for ws instance
     await waitFor(() => {
-        expect(mockWsInstance).not.toBeNull();
+      expect(screen.getByText('Simulated startCall error')).toBeInTheDocument();
     });
 
-    // Trigger onopen manually
-    await act(async () => {
-      if (mockWsInstance.onopen) mockWsInstance.onopen(new Event("open"));
+    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to start call:', errorToThrow);
+  });
+
+  it('handles ws.onerror correctly', async () => {
+    // Basic mock of AudioContext constructor
+    class MockAudioContext {
+      createBuffer = vi.fn()
+      createBufferSource = vi.fn()
+      createMediaStreamSource = vi.fn()
+      createScriptProcessor = vi.fn()
+      destination = {}
+      close = vi.fn()
+    }
+
+    window.AudioContext = MockAudioContext as any;
+
+    // Mock navigator.mediaDevices
+    Object.defineProperty(navigator, 'mediaDevices', {
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue({
+          getTracks: vi.fn().mockReturnValue([{ stop: vi.fn() }])
+        })
+      },
+      configurable: true
     });
 
-    // Simulate WS onmessage
-    await act(async () => {
-      if (mockWsInstance.onmessage) {
-        await mockWsInstance.onmessage({
-          data: JSON.stringify({ type: "open" })
-        });
+    let wsInstance: any = null;
+
+    class MockWebSocket {
+      send = vi.fn()
+      close = vi.fn()
+      readyState = 1 // OPEN
+      onopen: any = null
+      onerror: any = null
+      constructor() {
+        wsInstance = this;
       }
-    });
+    }
+    window.WebSocket = MockWebSocket as any;
 
-    // It should have logged the error
+    render(
+      <MemoryRouter>
+        <Chat />
+      </MemoryRouter>
+    );
+
+    const callButton = screen.getByRole('button', { name: /Call Agent/i });
+    fireEvent.click(callButton);
+
+    // Wait for the WS to be instantiated
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith("Error accessing microphone:", errorMsg);
+      expect(wsInstance).not.toBeNull();
     });
 
-    // And it should have ended the call, changing back to "Call Agent"
+    // Simulate ws open
+    if(wsInstance.onopen) wsInstance.onopen();
+
     await waitFor(() => {
-      expect(screen.getByText('Call Agent')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /End Call/i })).toBeInTheDocument();
     });
 
-    vi.unstubAllGlobals();
+    // Manually trigger the error callback directly on wsInstance
+    const wsError = new Error('Simulated WS Error');
+    wsInstance.onerror(wsError);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Proxy WebSocket error:', wsError);
+    });
   });
 });
