@@ -22,7 +22,7 @@ export function BrandKit() {
             Manage your brand identity, assets, and compliance documents for agents to use.
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium text-sm shadow-sm shadow-indigo-200">
+        <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-medium text-sm shadow-sm shadow-indigo-200 cursor-pointer hover:scale-105 active:scale-95 transition-all">
           <Upload className="w-4 h-4" />
           Upload Asset
         </button>
@@ -70,7 +70,7 @@ function PersonaTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Voice & Tone</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
@@ -101,7 +101,7 @@ function PersonaTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Color Palette</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -170,7 +170,7 @@ function MissionTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Company Mission</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
@@ -182,7 +182,7 @@ function MissionTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Slogans & Catchphrases</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
             <Plus className="w-4 h-4" />
           </button>
         </div>

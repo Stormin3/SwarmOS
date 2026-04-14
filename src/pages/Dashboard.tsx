@@ -140,7 +140,7 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-xl"
+      className="bg-white/90 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-xl hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer"
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-neutral-500">{title}</h3>
