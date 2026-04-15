@@ -146,9 +146,10 @@ export function Integrations() {
     });
   };
 
+  const lowercasedQuery = searchQuery.toLowerCase();
   const filteredIntegrations = integrations.filter(i => 
-    i.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    i.category.toLowerCase().includes(searchQuery.toLowerCase())
+    i.name.toLowerCase().includes(lowercasedQuery) ||
+    i.category.toLowerCase().includes(lowercasedQuery)
   );
 
   const handleConnect = (id: string) => {
