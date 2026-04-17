@@ -143,16 +143,19 @@ export function Projects() {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-neutral-100 overflow-hidden z-10"
                   >
-                    {STAGES.map((stage) => {
+                    {(() => {
+                      const activeStageIndex = STAGES.indexOf(activeProject.stage);
+                      return STAGES.map((stage, index) => {
                       const isCurrent = stage === activeProject.stage;
-                      const isPast = STAGES.indexOf(stage) < STAGES.indexOf(activeProject.stage);
+                        const isPast = index < activeStageIndex;
                       return (
                         <div key={stage} className={`px-4 py-3 flex items-center gap-3 text-sm ${isCurrent ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-neutral-600'}`}>
                           {isPast || isCurrent ? <CheckCircle2 className={`w-4 h-4 ${isCurrent ? 'text-indigo-600' : 'text-emerald-500'}`} /> : <Circle className="w-4 h-4 text-neutral-300" />}
                           {stage}
                         </div>
                       );
-                    })}
+                      });
+                    })()}
                   </motion.div>
                 )}
               </AnimatePresence>
