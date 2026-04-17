@@ -77,6 +77,7 @@ export function Projects() {
   };
 
   const STAGES: Stage[] = ["Initiated", "Planning", "Delegating", "In Progress", "Review", "Completed"];
+  const activeStageIndex = activeProject ? STAGES.indexOf(activeProject.stage) : -1;
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col md:flex-row gap-6">
@@ -143,9 +144,9 @@ export function Projects() {
                     exit={{ opacity: 0, y: 10 }}
                     className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-neutral-100 overflow-hidden z-10"
                   >
-                    {STAGES.map((stage) => {
-                      const isCurrent = stage === activeProject.stage;
-                      const isPast = STAGES.indexOf(stage) < STAGES.indexOf(activeProject.stage);
+                    {STAGES.map((stage, index) => {
+                      const isCurrent = index === activeStageIndex;
+                      const isPast = index < activeStageIndex;
                       return (
                         <div key={stage} className={`px-4 py-3 flex items-center gap-3 text-sm ${isCurrent ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-neutral-600'}`}>
                           {isPast || isCurrent ? <CheckCircle2 className={`w-4 h-4 ${isCurrent ? 'text-indigo-600' : 'text-emerald-500'}`} /> : <Circle className="w-4 h-4 text-neutral-300" />}
