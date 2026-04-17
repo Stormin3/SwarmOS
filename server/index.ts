@@ -53,9 +53,10 @@ wss.on("connection", (ws) => {
               },
             },
           });
-        } catch (setupError: any) {
+        } catch (setupError: unknown) {
           console.error("Error connecting to Gemini:", setupError);
-          ws.send(JSON.stringify({ type: "error", error: setupError.message }));
+          const errorMessage = setupError instanceof Error ? setupError.message : String(setupError);
+          ws.send(JSON.stringify({ type: "error", error: errorMessage }));
         }
       } else if (message.type === "realtimeInput") {
         if (session) {
