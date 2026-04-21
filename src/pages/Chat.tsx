@@ -123,8 +123,10 @@ export function Chat() {
 
               const uint8Data = new Uint8Array(pcmData.buffer);
               let binaryString = "";
-              for (let i = 0; i < uint8Data.length; i++) {
-                binaryString += String.fromCharCode(uint8Data[i]);
+              const chunkSize = 8192;
+              for (let i = 0; i < uint8Data.length; i += chunkSize) {
+                const chunk = uint8Data.subarray(i, i + chunkSize);
+                binaryString += String.fromCharCode.apply(null, chunk as unknown as number[]);
               }
               const base64Data = btoa(binaryString);
 
