@@ -70,13 +70,13 @@ export function HRExpert() {
   const hrAgent = MOCK_AGENTS.find(a => a.id === "hr-expert-001");
   const [selectedTemplate, setSelectedTemplate] = useState<typeof PRECONFIGURED_TEMPLATES[0] | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
-  const [deployed, setDeployed] = useState<string[]>([]);
+  const [deployed, setDeployed] = useState<Set<string>>(new Set());
 
   const handleDeploy = (id: string) => {
     setIsDeploying(true);
     setTimeout(() => {
       setIsDeploying(false);
-      setDeployed(prev => [...prev, id]);
+      setDeployed(prev => new Set(prev).add(id));
       setTimeout(() => setSelectedTemplate(null), 1000);
     }, 1500);
   };
@@ -161,7 +161,7 @@ export function HRExpert() {
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-semibold text-neutral-900 group-hover:text-indigo-600 transition-colors">{template.name}</h4>
-                    {deployed.includes(template.id) && (
+                    {deployed.has(template.id) && (
                       <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                         <CheckCircle2 className="w-3 h-3" /> Deployed
                       </span>
@@ -286,7 +286,7 @@ export function HRExpert() {
                 </button>
                 <button 
                   onClick={() => handleDeploy(selectedTemplate.id)}
-                  disabled={isDeploying || deployed.includes(selectedTemplate.id)}
+                  disabled={isDeploying || deployed.has(selectedTemplate.id)}
                   className="px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isDeploying ? (
@@ -294,7 +294,7 @@ export function HRExpert() {
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Deploying...
                     </>
-                  ) : deployed.includes(selectedTemplate.id) ? (
+                  ) : deployed.has(selectedTemplate.id) ? (
                     <>
                       <CheckCircle2 className="w-4 h-4" /> Deployed
                     </>
