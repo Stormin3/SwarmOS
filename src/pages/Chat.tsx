@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MOCK_AGENTS } from "../data/mockAgents";
 import { Agent } from "../types";
+import { getMockChatResponse } from "../lib/mockChat";
 import {
   Mic,
   MicOff,
@@ -44,21 +45,16 @@ export function Chat() {
     setCallError(null);
   }, [agentId]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
-    setMessages((prev) => [...prev, { role: "user", text: input }]);
+
+    const userMessage = input;
+    setMessages((prev) => [...prev, { role: "user", text: userMessage }]);
     setInput("");
 
-    // Mock response for text chat
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "agent",
-          text: `I am ${activeAgent?.name}. I received your message: "${input}"`,
-        },
-      ]);
-    }, 1000);
+    // Extracted mock response
+    const response = await getMockChatResponse(activeAgent, userMessage);
+    setMessages((prev) => [...prev, response]);
   };
 
   const startCall = async () => {
