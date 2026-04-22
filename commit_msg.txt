@@ -1,0 +1,6 @@
+🧹 [use proper typing for WebSocket sessionRef]
+
+🎯 **What:** Replaced the `any` type for `sessionRef` with the proper `WebSocket | null` type in `src/pages/Chat.tsx`.
+💡 **Why:** Using explicit types instead of `any` improves type safety, making the codebase more maintainable and easier to reason about. It prevents potential runtime errors by ensuring `sessionRef.current` only holds valid WebSocket instances or `null`.
+✅ **Verification:** Verified the code changes manually, and ran `npm run lint` and `npm run test` which both passed successfully.
+✨ **Result:** Improved codebase health and type safety for the live API connection state without changing functionality.
