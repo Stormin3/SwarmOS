@@ -3,6 +3,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, Session } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer } from "http";
+import { z } from "zod";
 
 dotenv.config();
 
@@ -20,13 +21,43 @@ if (!GEMINI_API_KEY) {
 
 const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+
+const messageSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("setup"),
+    config: z.any().optional(),
+    model: z.string().optional()
+  }),
+  z.object({
+    type: z.literal("realtimeInput"),
+    data: z.any()
+  })
+]);
+
 wss.on("connection", (ws) => {
   console.log("Client connected to WebSocket proxy");
   let session: Session | null = null;
 
   ws.on("message", async (data) => {
     try {
-      const message = JSON.parse(data.toString());
+
+      let message;
+      try {
+        message = JSON.parse(data.toString());
+      } catch (e) {
+        console.error("Invalid JSON:", e);
+        ws.send(JSON.stringify({ type: "error", error: "Invalid JSON format" }));
+        return;
+      }
+
+      const parsedMessage = messageSchema.safeParse(message);
+      if (parsedMessage.success === false) {
+        console.error("Validation error:", parsedMessage.error.format());
+        ws.send(JSON.stringify({ type: "error", error: "Invalid message payload" }));
+        return;
+      }
+      message = parsedMessage.data;
+
 
       if (message.type === "setup") {
         console.log("Setting up Gemini session with config:", message.config);
