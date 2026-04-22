@@ -12,7 +12,25 @@ const app = express();
 app.use(cors());
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
-const wss = new WebSocketServer({ server: httpServer, path: "/api/ws" });
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+const wss = new WebSocketServer({
+  server: httpServer,
+  path: "/api/ws",
+  verifyClient: (info, callback) => {
+    const origin = info.req.headers.origin;
+    if (!origin) {
+      return callback(false, 401, "Unauthorized");
+    }
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      callback(true);
+    } else {
+      callback(false, 403, "Forbidden");
+    }
+  }
+});
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
