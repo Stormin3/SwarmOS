@@ -8,13 +8,14 @@ import { z } from "zod";
 
 dotenv.config();
 
-const app = express();
-app.use(cors());
-const port = process.env.PORT || 3001;
-const httpServer = createServer(app);
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+const app = express();
+app.use(cors({ origin: ALLOWED_ORIGINS }));
+const port = process.env.PORT || 3001;
+const httpServer = createServer(app);
 
 const wss = new WebSocketServer({
   server: httpServer,
