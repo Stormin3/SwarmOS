@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Plug, CheckCircle2, Search, ArrowUpRight, Database, Globe, MessageSquare, Code, FileText, Mail, Calendar, FileSpreadsheet, Presentation, Plus, X, Box } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "../lib/utils";
@@ -146,11 +146,13 @@ export function Integrations() {
     });
   };
 
-  const lowercaseSearchQuery = searchQuery.toLowerCase();
-  const filteredIntegrations = integrations.filter(i => 
-    i.name.toLowerCase().includes(lowercaseSearchQuery) ||
-    i.category.toLowerCase().includes(lowercaseSearchQuery)
-  );
+  const filteredIntegrations = useMemo(() => {
+    const lowercaseSearchQuery = searchQuery.toLowerCase();
+    return integrations.filter(i =>
+      i.name.toLowerCase().includes(lowercaseSearchQuery) ||
+      i.category.toLowerCase().includes(lowercaseSearchQuery)
+    );
+  }, [integrations, searchQuery]);
 
   const handleConnect = (id: string) => {
     setConnecting(id);
