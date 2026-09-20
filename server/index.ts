@@ -123,14 +123,13 @@ wss.on("connection", (ws) => {
               },
               onerror: (err) => {
                 console.error("Gemini session error:", err);
-                ws.send(JSON.stringify({ type: "error", error: err.message }));
+                ws.send(JSON.stringify({ type: "error", error: "Internal Server Error" }));
               },
             },
           });
         } catch (setupError: unknown) {
           console.error("Error connecting to Gemini:", setupError);
-          const errorMessage = setupError instanceof Error ? setupError.message : String(setupError);
-          ws.send(JSON.stringify({ type: "error", error: errorMessage }));
+          ws.send(JSON.stringify({ type: "error", error: "Internal Server Error" }));
         }
       } else if (message.type === "realtimeInput") {
         if (session) {
