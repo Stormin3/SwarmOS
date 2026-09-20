@@ -86,7 +86,7 @@ describe('Server WebSocket Gemini connection', () => {
     expect(mockConnect).toHaveBeenCalled();
     expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
       type: "error",
-      error: "Mock connection failed"
+      error: "Internal Server Error"
     }));
   });
 });
