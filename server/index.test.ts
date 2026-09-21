@@ -4,6 +4,7 @@ vi.mock('express', () => {
   const app = {
     use: vi.fn(),
     get: vi.fn(),
+    post: vi.fn(),
   };
   return { default: vi.fn(() => app) };
 });

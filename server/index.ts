@@ -1,4 +1,5 @@
 import cors from "cors";
+import crypto from "crypto";
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, Session } from "@google/genai";
@@ -8,12 +9,23 @@ import { z } from "zod";
 
 dotenv.config();
 
+const wsTokens = new Set<string>();
+
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
   : ["http://localhost:3000", "http://127.0.0.1:3000"];
 
 const app = express();
 app.use(cors({ origin: ALLOWED_ORIGINS }));
+
+app.post("/api/ws-token", (req, res) => {
+  const token = crypto.randomBytes(32).toString("hex");
+  wsTokens.add(token);
+  // Token expires in 30 seconds
+  setTimeout(() => wsTokens.delete(token), 30000);
+  res.json({ token });
+});
+
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
@@ -25,11 +37,18 @@ const wss = new WebSocketServer({
     if (!origin) {
       return callback(false, 401, "Unauthorized");
     }
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      callback(true);
-    } else {
-      callback(false, 403, "Forbidden");
+    if (!ALLOWED_ORIGINS.includes(origin)) {
+      return callback(false, 403, "Forbidden");
     }
+
+    const url = new URL(info.req.url, `http://${info.req.headers.host || 'localhost'}`);
+    const token = url.searchParams.get("token");
+    if (!token || !wsTokens.has(token)) {
+      return callback(false, 401, "Unauthorized: Invalid or missing token");
+    }
+    wsTokens.delete(token); // One-time use
+
+    callback(true);
   }
 });
 

@@ -14,6 +14,10 @@ describe('Chat Component - Error Handling', () => {
     originalWebSocket = window.WebSocket;
     originalMediaDevices = navigator.mediaDevices;
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ token: 'mock-token' })
+    });
   });
 
   afterEach(() => {
@@ -24,6 +28,7 @@ describe('Chat Component - Error Handling', () => {
       configurable: true
     });
     consoleErrorSpy.mockRestore();
+    vi.restoreAllMocks();
   });
 
   it('handles startCall error correctly', async () => {
