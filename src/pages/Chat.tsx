@@ -87,7 +87,14 @@ export function Chat() {
       };
 
       ws.onmessage = async (event) => {
-        const message = JSON.parse(event.data);
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch (err) {
+          console.error("Error parsing WebSocket message:", err);
+          endCall();
+          return;
+        }
 
         if (message.type === "open") {
           try {
