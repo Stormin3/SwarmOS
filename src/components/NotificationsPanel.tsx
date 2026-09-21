@@ -110,6 +110,7 @@ export function NotificationsPanel({
                 </div>
               </div>
               <button 
+                aria-label="Close notifications"
                 onClick={onClose}
                 className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-full transition-colors"
               >

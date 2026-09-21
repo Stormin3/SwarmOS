@@ -100,7 +100,7 @@ export function Projects() {
               onKeyDown={e => e.key === 'Enter' && handleCreateProject()}
               className="flex-1 bg-white/50 border border-neutral-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <button onClick={handleCreateProject} className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-colors shadow-md">
+            <button aria-label="Create project" onClick={handleCreateProject} className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-colors shadow-md">
               <Play className="w-4 h-4 ml-0.5" />
             </button>
           </div>
@@ -202,7 +202,7 @@ export function Projects() {
                 placeholder="Send a message to the team..."
                 className="flex-1 bg-transparent border-none focus:outline-none text-sm py-1"
               />
-              <button className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+              <button aria-label="Send message" className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                 <Send className="w-4 h-4" />
               </button>
             </div>

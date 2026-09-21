@@ -1,0 +1,3 @@
+## 2025-02-27 - Icon-only buttons accessibility pattern
+**Learning:** React/JSX codebases using component libraries often lack `aria-label` attributes on icon-only interactive elements like `<button>`. While screen readers can sometimes infer purpose from surrounding context, a direct `aria-label` is required for clear, explicit action announcements.
+**Action:** When auditing React code, specifically target `<button>` elements containing only an `<Icon />` component (e.g., Lucide icons) and ensure they are assigned an appropriate `aria-label`. Use automated scripts or search patterns like `grep -rn "<button"` to quickly identify missing attributes.
