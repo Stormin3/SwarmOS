@@ -5,6 +5,7 @@ import { GoogleGenAI, Session } from "@google/genai";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { z } from "zod";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -17,10 +18,26 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
+const wsTokens = new Set<string>();
+app.get("/api/ws-token", (req, res) => {
+  const token = crypto.randomBytes(16).toString("hex");
+  wsTokens.add(token);
+  setTimeout(() => wsTokens.delete(token), 30000); // 30s expiry
+  res.json({ token });
+});
+
 const wss = new WebSocketServer({
   server: httpServer,
   path: "/api/ws",
   verifyClient: (info, callback) => {
+    const url = new URL(info.req.url || "", `http://${info.req.headers.host || 'localhost'}`);
+    const token = url.searchParams.get("token");
+
+    if (!token || !wsTokens.has(token)) {
+      return callback(false, 401, "Unauthorized");
+    }
+    wsTokens.delete(token); // Single-use
+
     const origin = info.req.headers.origin;
     if (!origin) {
       return callback(false, 401, "Unauthorized");
