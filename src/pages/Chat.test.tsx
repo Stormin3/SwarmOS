@@ -8,17 +8,24 @@ describe('Chat Component - Error Handling', () => {
   let originalWebSocket: any;
   let originalMediaDevices: any;
   let consoleErrorSpy: any;
+  let originalFetch: any;
 
   beforeEach(() => {
     originalAudioContext = window.AudioContext;
     originalWebSocket = window.WebSocket;
     originalMediaDevices = navigator.mediaDevices;
+    originalFetch = global.fetch;
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ token: 'mock-token' })
+    });
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     window.AudioContext = originalAudioContext;
     window.WebSocket = originalWebSocket;
+    global.fetch = originalFetch;
     Object.defineProperty(navigator, 'mediaDevices', {
       value: originalMediaDevices,
       configurable: true

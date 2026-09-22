@@ -65,8 +65,12 @@ export function Chat() {
       setCallError(null);
       setIsCalling(true);
 
+      const tokenRes = await fetch("/api/ws-token");
+      if (!tokenRes.ok) throw new Error("Failed to get authentication token");
+      const { token } = await tokenRes.json();
+
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/api/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/api/ws?token=${token}`;
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
       const ws = new WebSocket(wsUrl);
       sessionRef.current = ws;

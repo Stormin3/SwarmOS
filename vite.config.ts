@@ -14,6 +14,9 @@ export default defineConfig(({mode}) => {
     },
     server: {
       proxy: {
+        '/api/ws-token': {
+          target: 'http://localhost:3001',
+        },
         '/api/ws': {
           target: 'ws://localhost:3001',
           ws: true,
