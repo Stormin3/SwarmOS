@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Users, Sparkles, SlidersHorizontal, X, CheckCircle2, ShieldAlert, Target, Zap } from "lucide-react";
-import { MOCK_AGENTS } from "../data/mockAgents";
+import { MOCK_AGENTS_MAP } from "../data/mockAgents";
 import { motion, AnimatePresence } from "motion/react";
 
 const PRECONFIGURED_TEMPLATES = [
@@ -67,7 +67,8 @@ const PRECONFIGURED_TEMPLATES = [
 ];
 
 export function HRExpert() {
-  const hrAgent = MOCK_AGENTS.find(a => a.id === "hr-expert-001");
+  // ⚡ Bolt Optimization: Using O(1) Map lookup instead of O(N) Array.find
+  const hrAgent = MOCK_AGENTS_MAP.get("hr-expert-001");
   const [selectedTemplate, setSelectedTemplate] = useState<typeof PRECONFIGURED_TEMPLATES[0] | null>(null);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deployed, setDeployed] = useState<Set<string>>(new Set());
