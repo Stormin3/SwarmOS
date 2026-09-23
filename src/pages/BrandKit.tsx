@@ -70,7 +70,7 @@ function PersonaTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Voice & Tone</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
+          <button aria-label="Edit Voice & Tone" title="Edit Voice & Tone" className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
@@ -101,7 +101,7 @@ function PersonaTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Color Palette</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
+          <button aria-label="Add Color Palette" title="Add Color Palette" className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -149,11 +149,11 @@ function AssetsTab() {
               <p className="text-sm font-medium text-neutral-900 truncate">{asset.name}</p>
               <p className="text-xs text-neutral-500 mt-0.5">{asset.type} • {asset.size}</p>
             </div>
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-              <button className="p-1.5 bg-white text-neutral-600 hover:text-indigo-600 rounded-md shadow-sm border border-neutral-200">
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex gap-1">
+              <button aria-label="Download Asset" title="Download Asset" className="p-1.5 bg-white text-neutral-600 hover:text-indigo-600 rounded-md shadow-sm border border-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                 <Download className="w-3.5 h-3.5" />
               </button>
-              <button className="p-1.5 bg-white text-neutral-600 hover:text-red-600 rounded-md shadow-sm border border-neutral-200">
+              <button aria-label="Delete Asset" title="Delete Asset" className="p-1.5 bg-white text-neutral-600 hover:text-red-600 rounded-md shadow-sm border border-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -170,7 +170,7 @@ function MissionTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Company Mission</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
+          <button aria-label="Edit Company Mission" title="Edit Company Mission" className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
@@ -182,7 +182,7 @@ function MissionTab() {
       <div className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-neutral-900">Slogans & Catchphrases</h3>
-          <button className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all">
+          <button aria-label="Add Slogan" title="Add Slogan" className="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -241,11 +241,11 @@ function ComplianceTab() {
               )}>
                 {doc.status}
               </span>
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="p-1.5 text-neutral-400 hover:text-indigo-600 rounded-md hover:bg-indigo-50">
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                <button aria-label="Edit Document" title="Edit Document" className="p-1.5 text-neutral-400 hover:text-indigo-600 rounded-md hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                   <Edit2 className="w-4 h-4" />
                 </button>
-                <button className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md hover:bg-red-50">
+                <button aria-label="Delete Document" title="Delete Document" className="p-1.5 text-neutral-400 hover:text-red-600 rounded-md hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
