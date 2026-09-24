@@ -1,4 +1,5 @@
 import cors from "cors";
+import { rateLimit } from "express-rate-limit";
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import { GoogleGenAI, Session } from "@google/genai";
@@ -19,7 +20,14 @@ const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
 const wsTokens = new Set<string>();
-app.get("/api/ws-token", (req, res) => {
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: "Too many requests, please try again later." }
+});
+
+app.get("/api/ws-token", apiLimiter, (req, res) => {
   const token = crypto.randomBytes(16).toString("hex");
   wsTokens.add(token);
   setTimeout(() => wsTokens.delete(token), 30000); // 30s expiry
