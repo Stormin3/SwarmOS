@@ -18,8 +18,37 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
+const rateLimitMap = new Map<string, { count: number; expiresAt: number }>();
+const RATE_LIMIT = 10;
+const RATE_LIMIT_WINDOW_MS = 60000;
+
+const tokenRateLimiter = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+
+  const record = rateLimitMap.get(ip);
+  if (record && record.expiresAt > now) {
+    if (record.count >= RATE_LIMIT) {
+      res.status(429).json({ error: "Too many requests" });
+      return;
+    }
+    record.count++;
+  } else {
+    rateLimitMap.set(ip, { count: 1, expiresAt: now + RATE_LIMIT_WINDOW_MS });
+  }
+
+  if (Math.random() < 0.1) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (value.expiresAt <= now) {
+        rateLimitMap.delete(key);
+      }
+    }
+  }
+  next();
+};
+
 const wsTokens = new Set<string>();
-app.get("/api/ws-token", (req, res) => {
+app.get("/api/ws-token", tokenRateLimiter, (req, res) => {
   const token = crypto.randomBytes(16).toString("hex");
   wsTokens.add(token);
   setTimeout(() => wsTokens.delete(token), 30000); // 30s expiry
