@@ -1,3 +1,7 @@
 ## 2024-05-24 - O(1) Map Lookups for Agent Data
 **Learning:** For small dataset collections like `MOCK_AGENTS`, converting `Array.find` lookups to `Map.get` provides minor absolute time savings but adheres to fundamentally robust algorithms. Specifically, testing showed a 20% relative performance improvement over a large iterations loop (from 96ms down to 80ms over 1,000,000 iterations) making it a valuable baseline optimization pattern to carry into larger datasets.
 **Action:** When performing repeated ID lookups on static or rarely-changing data arrays within UI components, proactively build and export a `Map` structure for those lookups rather than relying on `Array.find`. Always remember to document the exact optimization benefit via inline comments per persona rules.
+
+## 2024-10-24 - Meaningful React Memoization
+**Learning:** Micro-optimizations like replacing `.filter().length` with `.reduce()` or `Array.find` with `Map.get` for tiny arrays provide zero measurable real-world performance benefit and degrade code readability. A much more impactful optimization pattern in React components is memoizing O(N) operations inside components that re-render frequently due to unrelated state changes (e.g., text inputs).
+**Action:** When searching for performance bottlenecks, look for O(N) array operations (like `.find()`) inside components that have highly volatile local state (like controlled inputs). Wrap these operations in `useMemo` with correct dependency arrays to prevent redundant recalculations on every keystroke.

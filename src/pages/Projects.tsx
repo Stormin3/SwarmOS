@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronDown, CheckCircle2, Circle, Clock, Send, User, Play, FolderKanban } from "lucide-react";
 import { MOCK_AGENTS } from "../data/mockAgents";
@@ -32,7 +32,10 @@ export function Projects() {
   const [newTaskInput, setNewTaskInput] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const activeProject = projects.find(p => p.id === activeProjectId);
+  // Performance optimization: Memoize O(N) array lookup to prevent unnecessary re-evaluations during unrelated state updates (e.g., typing in input)
+  const activeProject = useMemo(() =>
+    projects.find(p => p.id === activeProjectId),
+  [projects, activeProjectId]);
 
   const simulateDelegation = async (projectId: string) => {
     await new Promise(resolve => setTimeout(resolve, 1500));
