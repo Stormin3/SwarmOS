@@ -18,11 +18,37 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
-const wsTokens = new Set<string>();
+const wsTokens = new Map<string, number>();
+const rateLimitMap = new Map<string, { count: number, resetTime: number }>();
+
 app.get("/api/ws-token", (req, res) => {
+  if (Math.random() < 0.1) {
+    const now = Date.now();
+    for (const [key, exp] of wsTokens.entries()) {
+      if (now > exp) wsTokens.delete(key);
+    }
+    for (const [key, data] of rateLimitMap.entries()) {
+      if (now > data.resetTime) rateLimitMap.delete(key);
+    }
+  }
+
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  let rateData = rateLimitMap.get(ip);
+
+  if (!rateData || now > rateData.resetTime) {
+    rateData = { count: 0, resetTime: now + 60000 };
+  }
+
+  if (rateData.count >= 10) {
+    res.status(429).json({ error: "Too many requests" });
+    return;
+  }
+  rateData.count++;
+  rateLimitMap.set(ip, rateData);
+
   const token = crypto.randomBytes(16).toString("hex");
-  wsTokens.add(token);
-  setTimeout(() => wsTokens.delete(token), 30000); // 30s expiry
+  wsTokens.set(token, now + 30000); // 30s expiry
   res.json({ token });
 });
 
@@ -32,8 +58,11 @@ const wss = new WebSocketServer({
   verifyClient: (info, callback) => {
     const url = new URL(info.req.url || "", `http://${info.req.headers.host || 'localhost'}`);
     const token = url.searchParams.get("token");
+    const now = Date.now();
 
-    if (!token || !wsTokens.has(token)) {
+    const exp = token ? wsTokens.get(token) : undefined;
+    if (!token || !exp || now > exp) {
+      if (token) wsTokens.delete(token);
       return callback(false, 401, "Unauthorized");
     }
     wsTokens.delete(token); // Single-use
