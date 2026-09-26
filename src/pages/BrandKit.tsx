@@ -143,7 +143,7 @@ function AssetsTab() {
         {assets.map(asset => (
           <div key={asset.id} className="group relative border border-neutral-200 rounded-xl overflow-hidden hover:border-indigo-300 transition-colors">
             <div className="aspect-video bg-neutral-100 p-4 flex items-center justify-center">
-              <img src={asset.url} alt={asset.name} className="max-w-full max-h-full object-contain mix-blend-multiply" referrerPolicy="no-referrer" />
+              <img loading="lazy" src={asset.url} /* ⚡ Bolt Optimization: Lazy load off-screen assets to improve initial page load */  alt={asset.name} className="max-w-full max-h-full object-contain mix-blend-multiply" referrerPolicy="no-referrer" />
             </div>
             <div className="p-3 bg-white border-t border-neutral-200">
               <p className="text-sm font-medium text-neutral-900 truncate">{asset.name}</p>
