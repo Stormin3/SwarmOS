@@ -1,4 +1,9 @@
-## 2025-02-14 - Fix missing WebSocket authentication
-**Vulnerability:** The WebSocket endpoint `/api/ws` lacked authentication, allowing unauthorized users to connect and proxy requests to the Gemini API, bypassing intended origin checks (which can be spoofed in non-browser clients).
-**Learning:** Relying solely on the `Origin` header in `verifyClient` is insufficient for WebSocket security because origin headers can be trivially forged by programmatic clients or scripts.
-**Prevention:** Implement a token-based authentication mechanism where a short-lived token is requested via an HTTP endpoint (which enforces CORS) and passed in the WebSocket connection URL to validate the request.
+## 2024-05-23 - Timer Leak DoS in Token Endpoints
+**Vulnerability:** A `setTimeout` was created for every requested WebSocket token, which could lead to a memory leak and Denial of Service if requested rapidly.
+**Learning:** `setTimeout` shouldn't be used to expire dynamically generated items like short-lived tokens, as they pile up in memory.
+**Prevention:** Use a lazy-cleanup pattern (checking expiration on access) and probabilistic garbage collection (`Math.random() < 0.1`) to manage short-lived tokens without background timers.
+
+## 2024-05-23 - Avoiding Supertest without types
+**Vulnerability:** Not a vulnerability, but a test failure. Using `supertest` in test files causes `pnpm lint` (`tsc --noEmit`) to fail because `@types/supertest` is not installed.
+**Learning:** Always check package.json for available dependencies before introducing new ones in tests.
+**Prevention:** Use native `fetch` against a locally running server for simple API endpoint testing instead of bringing in new test framework dependencies.

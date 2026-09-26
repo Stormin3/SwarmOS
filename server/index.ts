@@ -18,11 +18,18 @@ app.use(cors({ origin: ALLOWED_ORIGINS }));
 const port = process.env.PORT || 3001;
 const httpServer = createServer(app);
 
-const wsTokens = new Set<string>();
+const wsTokens = new Map<string, number>();
 app.get("/api/ws-token", (req, res) => {
   const token = crypto.randomBytes(16).toString("hex");
-  wsTokens.add(token);
-  setTimeout(() => wsTokens.delete(token), 30000); // 30s expiry
+  wsTokens.set(token, Date.now() + 30000);
+
+  if (Math.random() < 0.1) {
+    const now = Date.now();
+    for (const [k, v] of wsTokens.entries()) {
+      if (v < now) wsTokens.delete(k);
+    }
+  }
+
   res.json({ token });
 });
 
@@ -33,7 +40,12 @@ const wss = new WebSocketServer({
     const url = new URL(info.req.url || "", `http://${info.req.headers.host || 'localhost'}`);
     const token = url.searchParams.get("token");
 
-    if (!token || !wsTokens.has(token)) {
+    if (!token) {
+      return callback(false, 401, "Unauthorized");
+    }
+    const expiry = wsTokens.get(token);
+    if (!expiry || expiry < Date.now()) {
+      if (expiry) wsTokens.delete(token);
       return callback(false, 401, "Unauthorized");
     }
     wsTokens.delete(token); // Single-use
