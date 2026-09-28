@@ -1,8 +1,4 @@
-## 2025-02-14 - Fix missing WebSocket authentication
-**Vulnerability:** The WebSocket endpoint `/api/ws` lacked authentication, allowing unauthorized users to connect and proxy requests to the Gemini API, bypassing intended origin checks (which can be spoofed in non-browser clients).
-**Learning:** Relying solely on the `Origin` header in `verifyClient` is insufficient for WebSocket security because origin headers can be trivially forged by programmatic clients or scripts.
-**Prevention:** Implement a token-based authentication mechanism where a short-lived token is requested via an HTTP endpoint (which enforces CORS) and passed in the WebSocket connection URL to validate the request.
-## 2023-10-25 - Fix DoS risk in websocket token generation
-**Vulnerability:** Unbounded `setTimeout` per request and lack of rate limiting on the `/api/ws-token` endpoint could lead to memory leaks and denial of service.
-**Learning:** Using `setTimeout` for temporary state cleanup creates an unbounded timer per request, which is a DoS vector.
-**Prevention:** Use a lazy-cleanup pattern by checking expiration timestamps on access, combined with probabilistic garbage collection, to prevent unbounded timers.
+## 2023-10-27 - [MEDIUM] Unvalidated External API Configuration
+**Vulnerability:** The WebSocket proxy backend accepted arbitrary configuration objects from the client (`z.any()`) to initialize the Gemini API session, which could allow a malicious client to inject properties that bypass safety filters (like `safetySettings: [{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }]`).
+**Learning:** Using overly permissive validation schemas (like `z.any()`) for complex objects passed directly to external APIs creates an injection vector, allowing clients to assume privileges or bypass controls enforced by the external service.
+**Prevention:** Always use strict schema validation (e.g., Zod's `.strict()`) for complex external configuration objects, explicitly defining and allowing only the required and safe fields.
