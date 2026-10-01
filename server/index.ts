@@ -92,7 +92,17 @@ const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 const messageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("setup"),
-    config: z.any().optional(),
+    config: z.object({
+      responseModalities: z.array(z.string()).optional(),
+      speechConfig: z.object({
+        voiceConfig: z.object({
+          prebuiltVoiceConfig: z.object({
+            voiceName: z.string()
+          }).optional()
+        }).optional()
+      }).optional(),
+      systemInstruction: z.any().optional()
+    }).strict().optional(),
     model: z.string().optional()
   }),
   z.object({
